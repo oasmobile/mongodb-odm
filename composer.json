@@ -1,0 +1,5 @@
+{
+    "require": {
+        "oasis/dynamodb-odm": "^1.0"
+    }
+}
