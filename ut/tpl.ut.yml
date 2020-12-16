@@ -1,0 +1,6 @@
+mongodb:
+    prefix: odm-ut-
+    project_id: 'platform-share'
+    instance_id: 'spanner-pitr-test'
+    database_id: 'xingrong-test'
+    cache_pool_sessions: 1
