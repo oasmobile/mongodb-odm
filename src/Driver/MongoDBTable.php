@@ -38,15 +38,18 @@ class MongoDBTable
 
     public function set(array $obj, $checkValues = [])
     {
-        $filer = array_values($this->itemReflection->getPrimaryKeys($obj));
+        $this->dbCollection->findOneAndUpdate(
+            $this->itemReflection->getPrimaryKeys($obj),
+            [
+                '$set' => $obj,
+            ],
+            [
+                'upsert' => true,
+                'todo'   => $checkValues  // remove later
+            ]
+        );
 
-//        $this->dbCollection->findOneAndUpdate(
-//            array_values($this->itemReflection->getPrimaryKeys($obj)),
-//            $obj,
-//            [
-//                'upsert' => true,
-//            ]
-//        );
+        // todo: implement check and set
     }
 
 }

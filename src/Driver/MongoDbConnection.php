@@ -5,7 +5,6 @@ namespace Oasis\Mlib\ODM\MongoDB\Driver;
 use Oasis\Mlib\ODM\Dynamodb\DBAL\Drivers\AbstractDbConnection;
 use Oasis\Mlib\ODM\Dynamodb\Exceptions\ODMException;
 use Oasis\Mlib\ODM\Dynamodb\ItemManager;
-use Oasis\Mlib\ODM\Spanner\Driver\Google\SpannerTable;
 
 /**
  * Class MongoDbConnection
@@ -13,7 +12,7 @@ use Oasis\Mlib\ODM\Spanner\Driver\Google\SpannerTable;
  */
 class MongoDbConnection extends AbstractDbConnection
 {
-    /** @var MongoDBTable  */
+    /** @var MongoDBTable */
     private $dbTable = null;
 
     protected function getDatabaseTable()
@@ -37,6 +36,7 @@ class MongoDbConnection extends AbstractDbConnection
 
         return $this->dbTable;
     }
+
     /**
      * @inheritDoc
      */
@@ -69,7 +69,7 @@ class MongoDbConnection extends AbstractDbConnection
 
     public function set(array $obj, $checkValues = [])
     {
-        // TODO: Implement set() method.
+        $this->getDatabaseTable()->set($obj, $checkValues);
     }
 
     public function get(array $keys, $is_consistent_read = false, $projectedFields = [])
