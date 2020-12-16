@@ -1,6 +1,6 @@
 {
-    "name": "oasis/aliyun-mongodb-odm",
-    "description": "ODM for Aliyun Mongodb",
+    "name": "oasis/mongodb-odm",
+    "description": "ODM driver for MongoDB",
     "type": "library",
     "require": {
         "oasis/dynamodb-odm": "^1.0",
