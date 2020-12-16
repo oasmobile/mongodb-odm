@@ -14,7 +14,7 @@ class UTConfig
         $file = __DIR__."/ut.yml";
         $yml  = Yaml::parse(file_get_contents($file));
 
-        self::$dbConfig    = $yml['mongodb'];
-        self::$tablePrefix = $yml['mongodb']['prefix'];
+        self::$dbConfig    = $yml['mongodb-odm'];
+        self::$tablePrefix = $yml['mongodb-odm']['prefix'];
     }
 }

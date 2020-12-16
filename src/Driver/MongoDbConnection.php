@@ -3,7 +3,9 @@
 namespace Oasis\Mlib\ODM\MongoDB\Driver;
 
 use Oasis\Mlib\ODM\Dynamodb\DBAL\Drivers\AbstractDbConnection;
+use Oasis\Mlib\ODM\Dynamodb\Exceptions\ODMException;
 use Oasis\Mlib\ODM\Dynamodb\ItemManager;
+use Oasis\Mlib\ODM\Spanner\Driver\Google\SpannerTable;
 
 /**
  * Class MongoDbConnection
@@ -11,7 +13,30 @@ use Oasis\Mlib\ODM\Dynamodb\ItemManager;
  */
 class MongoDbConnection extends AbstractDbConnection
 {
+    /** @var MongoDBTable  */
+    private $dbTable = null;
 
+    protected function getDatabaseTable()
+    {
+        if ($this->dbTable !== null) {
+            return $this->dbTable;
+        }
+        if (empty($this->tableName)) {
+            throw new ODMException("Unknown table name to initialize MongoDB client");
+        }
+
+        if ($this->itemReflection === null) {
+            throw new ODMException("Unknown item reflection to initialize MongoDB client");
+        }
+
+        $this->dbTable = new MongoDBTable(
+            $this->dbConfig,
+            $this->tableName,
+            $this->itemReflection
+        );
+
+        return $this->dbTable;
+    }
     /**
      * @inheritDoc
      */

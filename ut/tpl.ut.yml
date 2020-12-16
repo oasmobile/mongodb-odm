@@ -1,6 +1,4 @@
-mongodb:
+mongodb-odm:
+    endpoint: 'mongodb://127.0.0.1/'
+    database: 'oas-test'
     prefix: odm-ut-
-    project_id: 'platform-share'
-    instance_id: 'spanner-pitr-test'
-    database_id: 'xingrong-test'
-    cache_pool_sessions: 1
