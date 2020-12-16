@@ -69,12 +69,12 @@ class MongoDbConnection extends AbstractDbConnection
 
     public function set(array $obj, $checkValues = [])
     {
-        $this->getDatabaseTable()->set($obj, $checkValues);
+        return $this->getDatabaseTable()->set($obj, $checkValues);
     }
 
     public function get(array $keys, $is_consistent_read = false, $projectedFields = [])
     {
-        // TODO: Implement get() method.
+        return $this->getDatabaseTable()->get($keys);
     }
 
     public function query(

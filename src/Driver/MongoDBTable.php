@@ -4,6 +4,7 @@ namespace Oasis\Mlib\ODM\MongoDB\Driver;
 
 use MongoDB\Client;
 use MongoDB\Collection;
+use MongoDB\Model\BSONDocument;
 use Oasis\Mlib\ODM\Dynamodb\ItemReflection;
 
 /**
@@ -50,6 +51,35 @@ class MongoDBTable
         );
 
         // todo: implement check and set
+        return true;
+    }
+
+    public function get(array $keys)
+    {
+        $doc = $this->dbCollection->find(
+            $keys,
+            [
+                'limit' => 1,
+            ]
+        );
+
+        if ($doc === null) {
+            return null;
+        }
+
+        $arr = $doc->toArray();
+
+        if (empty($arr) || empty($arr[0])) {
+            return null;
+        }
+
+        /** @var BSONDocument $bsonDoc */
+        $bsonDoc = $arr[0];
+        $ret     = $bsonDoc->exchangeArray([]);
+
+        unset($ret['_id']);
+
+        return $ret;
     }
 
 }
