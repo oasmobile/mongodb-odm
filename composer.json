@@ -1,5 +1,6 @@
 {
     "require": {
-        "oasis/dynamodb-odm": "^1.0"
+        "oasis/dynamodb-odm": "^1.0",
+        "mongodb/mongodb": "^1.8"
     }
 }
