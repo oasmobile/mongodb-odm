@@ -37,23 +37,6 @@ class MongoDBTable
         $this->attributeTypes = $itemReflection->getAttributeTypes();
     }
 
-    public function set(array $obj, $checkValues = [])
-    {
-        $this->dbCollection->findOneAndUpdate(
-            $this->itemReflection->getPrimaryKeys($obj),
-            [
-                '$set' => $obj,
-            ],
-            [
-                'upsert' => true,
-                'todo'   => $checkValues  // remove later
-            ]
-        );
-
-        // todo: implement check and set
-        return true;
-    }
-
     public function get(array $keys)
     {
         $doc = $this->dbCollection->find(
@@ -99,6 +82,23 @@ class MongoDBTable
             $this->set($obj);
         }
 
+        return true;
+    }
+
+    public function set(array $obj, $checkValues = [])
+    {
+        $this->dbCollection->findOneAndUpdate(
+            $this->itemReflection->getPrimaryKeys($obj),
+            [
+                '$set' => $obj,
+            ],
+            [
+                'upsert' => true,
+                'todo'   => $checkValues  // remove later
+            ]
+        );
+
+        // todo: implement check and set
         return true;
     }
 
