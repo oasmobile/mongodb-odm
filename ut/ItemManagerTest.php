@@ -396,9 +396,13 @@ class ItemManagerTest extends TestCase
      */
     public function testBatchGet($users)
     {
-        $keys[] = ["id" => -PHP_INT_MAX,]; // some non existing key
+        $keys = [];
+        foreach ($users as $user) {
+            $keys[] = ["id" => $user->getId()];
+        }
+
         $result = $this->itemManager->getRepository(User::class)->batchGet($keys);
-        $this->assertEquals(count($keys), count($result) + 1); // we get all result except the non-existing one
+        $this->assertEquals(count($keys), count($result));
         /** @var User $user */
         foreach ($result as $user) {
             $this->assertArrayHasKey($user->getId(), $users);

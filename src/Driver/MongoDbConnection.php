@@ -54,7 +54,7 @@ class MongoDbConnection extends AbstractDbConnection
         $retryDelay = 0,
         $maxDelay = 15000
     ) {
-        // TODO: Implement batchGet() method.
+        return $this->getDatabaseTable()->batchGet($keys);
     }
 
     public function batchDelete(array $objs, $concurrency = 10, $maxDelay = 15000)
@@ -64,7 +64,7 @@ class MongoDbConnection extends AbstractDbConnection
 
     public function batchPut(array $objs, $concurrency = 10, $maxDelay = 15000)
     {
-        // TODO: Implement batchPut() method.
+        return $this->getDatabaseTable()->batchPut($objs);
     }
 
     public function set(array $obj, $checkValues = [])

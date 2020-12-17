@@ -93,4 +93,43 @@ class MongoDBTable
         return true;
     }
 
+    public function batchPut(array $objs)
+    {
+        foreach ($objs as $obj) {
+            $this->set($obj);
+        }
+
+        return true;
+    }
+
+    public function batchGet(array $keys)
+    {
+        $doc = $this->dbCollection->find(
+            [
+                '$or' => $keys,
+            ]
+        );
+
+        if ($doc === null) {
+            return [];
+        }
+
+        $arr = $doc->toArray();
+
+        if (empty($arr)) {
+            return [];
+        }
+
+        $retList = [];
+        foreach ($arr as $item) {
+            /** @var BSONDocument $bsonDoc */
+            $bsonDoc = $item;
+            $ret     = $bsonDoc->exchangeArray([]);
+            unset($ret['_id']);
+            $retList[] = $ret;
+        }
+
+        return $retList;
+    }
+
 }
