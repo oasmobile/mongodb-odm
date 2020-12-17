@@ -59,7 +59,7 @@ class MongoDbConnection extends AbstractDbConnection
 
     public function batchDelete(array $objs, $concurrency = 10, $maxDelay = 15000)
     {
-        // TODO: Implement batchDelete() method.
+        return $this->getDatabaseTable()->batchDelete($objs);
     }
 
     public function batchPut(array $objs, $concurrency = 10, $maxDelay = 15000)

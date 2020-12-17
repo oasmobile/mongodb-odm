@@ -82,4 +82,15 @@ class MongoDBTable
         return $ret;
     }
 
+    public function batchDelete(array $objs)
+    {
+        foreach ($objs as $obj) {
+            $this->dbCollection->deleteOne(
+                $this->itemReflection->getPrimaryKeys($obj)
+            );
+        }
+
+        return true;
+    }
+
 }
