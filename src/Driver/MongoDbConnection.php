@@ -89,7 +89,12 @@ class MongoDbConnection extends AbstractDbConnection
         $isAscendingOrder = true,
         $projectedFields = []
     ) {
-        // TODO: Implement query() method.
+        return $this->getDatabaseTable()->query(
+            $keyConditions,
+            $fieldsMapping,
+            $paramsMapping,
+            $evaluationLimit
+        );
     }
 
     public function queryAndRun(

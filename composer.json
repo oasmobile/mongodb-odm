@@ -4,7 +4,8 @@
     "type": "library",
     "require": {
         "oasis/dynamodb-odm": "^1.0",
-        "mongodb/mongodb": "^1.8"
+        "mongodb/mongodb": "^1.8",
+        "ext-mongodb": "*"
     },
     "require-dev": {
         "phpunit/phpunit": "^7.5",

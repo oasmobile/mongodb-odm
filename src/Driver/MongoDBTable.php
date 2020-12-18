@@ -4,6 +4,7 @@ namespace Oasis\Mlib\ODM\MongoDB\Driver;
 
 use MongoDB\Client;
 use MongoDB\Collection;
+use MongoDB\Driver\Cursor;
 use MongoDB\Model\BSONDocument;
 use Oasis\Mlib\ODM\Dynamodb\ItemReflection;
 
@@ -46,23 +47,14 @@ class MongoDBTable
             ]
         );
 
-        if ($doc === null) {
-            return null;
+        $ret = $this->getArrayElements($doc);
+
+        if (empty($ret)) {
+            return $ret;
         }
-
-        $arr = $doc->toArray();
-
-        if (empty($arr) || empty($arr[0])) {
-            return null;
+        else {
+            return $ret[0];
         }
-
-        /** @var BSONDocument $bsonDoc */
-        $bsonDoc = $arr[0];
-        $ret     = $bsonDoc->exchangeArray([]);
-
-        unset($ret['_id']);
-
-        return $ret;
     }
 
     public function batchDelete(array $objs)
@@ -110,11 +102,32 @@ class MongoDBTable
             ]
         );
 
-        if ($doc === null) {
+        return $this->getArrayElements($doc);
+    }
+
+    public function query(
+        $keyConditions,
+        array $fieldsMapping,
+        array $paramsMapping,
+        $evaluationLimit = 30
+    ) {
+        $doc = $this->dbCollection->find(
+            (new QueryConditionWrapper($keyConditions, $fieldsMapping, $paramsMapping))->getFilter(),
+            [
+                'limit' => $evaluationLimit,
+            ]
+        );
+
+        return $this->getArrayElements($doc);
+    }
+
+    protected function getArrayElements(Cursor $cursor)
+    {
+        if ($cursor === null) {
             return [];
         }
 
-        $arr = $doc->toArray();
+        $arr = $cursor->toArray();
 
         if (empty($arr)) {
             return [];

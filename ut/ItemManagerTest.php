@@ -476,13 +476,24 @@ class ItemManagerTest extends TestCase
 
     public function testQueryWithAttributeKey()
     {
-        self::expectException(ODMException::class);
-        $this->itemManager->getRepository(User::class)
+        $user = new User();
+        $user->setId(mt_rand(1000, PHP_INT_MAX));
+        $user->setName('QU-test');
+        $user->setAge(12);
+        $user->setWage(2000);
+        $user->setHometown("NY");
+
+        $this->itemManager->persist($user);
+        $this->itemManager->flush();
+
+        $ret = $this->itemManager->getRepository(User::class)
             ->query(
-                '#hometown = :hometown AND #salary > :wage',
+                '#hometown = :hometown AND #wage > :wage',
                 [':hometown' => 'NY', ':wage' => 100],
                 'hometown-salary-index'
             );
+
+        $this->assertNotEmpty($ret);
     }
 
     public function testQueryCountWithAttributeKey()
