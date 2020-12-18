@@ -1,0 +1,32 @@
+{
+    "name": "oasis/mongodb-odm",
+    "description": "ODM driver for MongoDB",
+    "type": "library",
+    "require": {
+        "oasis/dynamodb-odm": "^1.0",
+        "mongodb/mongodb": "^1.8",
+        "ext-mongodb": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7.5",
+        "symfony/yaml": "^4.4",
+        "ext-json": "*"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Xuchang Zhang",
+            "email": "zhang.xuchang@qq.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Oasis\\Mlib\\ODM\\MongoDB\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Oasis\\Mlib\\ODM\\MongoDB\\Ut\\": "ut/"
+        }
+    }
+}
