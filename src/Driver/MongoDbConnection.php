@@ -130,7 +130,7 @@ class MongoDbConnection extends AbstractDbConnection
                     }
                 }
             }
-        } while (!empty($resultSet) && $stoppedByCallback == true);
+        } while (!empty($resultSet) && $stoppedByCallback === false);
     }
 
     public function queryCount(

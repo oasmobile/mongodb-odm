@@ -522,7 +522,7 @@ class ItemManagerTest extends TestCase
                         ).PHP_EOL;
                 },
                 '#hometown = :hometown AND #wage > :wage',
-                [':hometown' => 'new york', ':wage' => 100],
+                [':hometown' => 'NY', ':wage' => 100],
                 'hometown-salary-index'
             );
     }

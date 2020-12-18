@@ -145,9 +145,7 @@ class MongoDBTable
         ))->getFilter();
 
         if (!empty($lastId)) {
-            $filter[] = [
-                '_id' => ['$gt' => $lastId],
-            ];
+            $filter['_id'] = ['$gt' => $lastId];
         }
 
         $doc = $this->dbCollection->find(
