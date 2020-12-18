@@ -164,7 +164,22 @@ class MongoDbConnection extends AbstractDbConnection
         $concurrency = 10,
         $projectedFields = []
     ) {
-        throw new \Exception("No implement for this method");
+        if (!is_array($hashKeyValues)) {
+            $hashKeyValues = [$hashKeyValues];
+        }
+
+        $keyConditions = "#{$hashKeyName} = :{$hashKeyName} AND {$rangeKeyConditions}";
+
+        foreach ($hashKeyValues as $hashKeyValue) {
+            $paramsMapping[":{$hashKeyName}"] = $hashKeyValue;
+            $fieldsMapping["#{$hashKeyName}"] = $hashKeyName;
+            $this->queryAndRun(
+                $callback,
+                $keyConditions,
+                $fieldsMapping,
+                $paramsMapping
+            );
+        }
     }
 
     public function scan(

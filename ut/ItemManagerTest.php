@@ -527,6 +527,35 @@ class ItemManagerTest extends TestCase
             );
     }
 
+    public function testMultiQueryAndRunWithAttributeKey()
+    {
+        //$this->markTestSkipped();
+
+        $retCnt = 0;
+
+        $this->itemManager->getRepository(User::class)->multiQueryAndRun(
+            function (User $user) use (&$retCnt) {
+                $retCnt++;
+                echo PHP_EOL.sprintf(
+                        "id=%s, name=%s,age=%s,salary=%s",
+                        $user->getId(),
+                        $user->getName(),
+                        $user->getAge(),
+                        $user->getWage()
+                    ).PHP_EOL;
+            },
+            "hometown",
+            "NY",
+            "#age > :age",
+            [":age" => 10],
+            "home-age-gsi",
+            "",
+            3
+        );
+
+        $this->assertTrue($retCnt > 0);
+    }
+
     public function testQueryAndScan()
     {
         $base = mt_rand(100, PHP_INT_MAX);
@@ -560,6 +589,21 @@ class ItemManagerTest extends TestCase
             'hometown-age-index'
         );
         $this->assertEquals(5, count($result));
+
+        $result = [];
+        $this->itemManager->getRepository(User::class)->multiQueryAndRun(
+            function ($item) use (&$result) {
+                $result[] = $item;
+            },
+            "hometownPartition",
+            "NY".$base,
+            "#age > :age",
+            [":age" => 48],
+            "home-age-gsi",
+            "",
+            3
+        );
+        $this->assertEquals(3, count($result));
 
         // remove all inserted users
         $count = $this->itemManager->getRepository(User::class)->scanCount(
