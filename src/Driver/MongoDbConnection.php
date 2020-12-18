@@ -168,14 +168,12 @@ class MongoDbConnection extends AbstractDbConnection
             $hashKeyValues = [$hashKeyValues];
         }
 
-        $keyConditions = "#{$hashKeyName} = :{$hashKeyName} AND {$rangeKeyConditions}";
-
         foreach ($hashKeyValues as $hashKeyValue) {
             $paramsMapping[":{$hashKeyName}"] = $hashKeyValue;
             $fieldsMapping["#{$hashKeyName}"] = $hashKeyName;
             $this->queryAndRun(
                 $callback,
-                $keyConditions,
+                "#{$hashKeyName} = :{$hashKeyName} AND {$rangeKeyConditions}",
                 $fieldsMapping,
                 $paramsMapping
             );
@@ -193,7 +191,12 @@ class MongoDbConnection extends AbstractDbConnection
         $isAscendingOrder = true,
         $projectedFields = []
     ) {
-        throw new \Exception("No implement for this method");
+        return $this->getDatabaseTable()->query(
+            $filterExpression,
+            $fieldsMapping,
+            $paramsMapping,
+            $evaluationLimit
+        );
     }
 
     public function scanAndRun(
@@ -206,7 +209,12 @@ class MongoDbConnection extends AbstractDbConnection
         $isAscendingOrder = true,
         $projectedFields = []
     ) {
-        throw new \Exception("No implement for this method");
+        $this->queryAndRun(
+            $callback,
+            $filterExpression,
+            $fieldsMapping,
+            $paramsMapping
+        );
     }
 
     public function parallelScanAndRun(
@@ -220,7 +228,12 @@ class MongoDbConnection extends AbstractDbConnection
         $isAscendingOrder = true,
         $projectedFields = []
     ) {
-        throw new \Exception("No implement for this method");
+        $this->queryAndRun(
+            $callback,
+            $filterExpression,
+            $fieldsMapping,
+            $paramsMapping
+        );
     }
 
     public function scanCount(
@@ -231,6 +244,10 @@ class MongoDbConnection extends AbstractDbConnection
         $isConsistentRead = false,
         $parallel = 10
     ) {
-        throw new \Exception("No implement for this method");
+        return $this->getDatabaseTable()->queryCount(
+            $filterExpression,
+            $fieldsMapping,
+            $paramsMapping
+        );
     }
 }

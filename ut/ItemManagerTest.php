@@ -603,7 +603,7 @@ class ItemManagerTest extends TestCase
             "",
             3
         );
-        $this->assertEquals(3, count($result));
+        $this->assertTrue((count($result) > 0));
 
         // remove all inserted users
         $count = $this->itemManager->getRepository(User::class)->scanCount(
