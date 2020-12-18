@@ -35,6 +35,7 @@ class ItemManagerTest extends TestCase
         $user->setAge(12);
         $user->setWage(2000);
         $user->setAlias('TestUser');
+        $user->setHometown("NY");
         $this->itemManager->persist($user);
         $this->itemManager->flush();
 
@@ -384,7 +385,7 @@ class ItemManagerTest extends TestCase
         $this->itemManager->flush();
         $this->itemManager->setSkipCheckAndSet(false);
 
-        $this->assertEquals(10,sizeof($users));
+        $this->assertEquals(10, sizeof($users));
 
         return $users;
     }
@@ -474,18 +475,11 @@ class ItemManagerTest extends TestCase
             );
     }
 
+    /**
+     * @depends testPersistAndGet
+     */
     public function testQueryWithAttributeKey()
     {
-        $user = new User();
-        $user->setId(mt_rand(1000, PHP_INT_MAX));
-        $user->setName('QU-test');
-        $user->setAge(12);
-        $user->setWage(2000);
-        $user->setHometown("NY");
-
-        $this->itemManager->persist($user);
-        $this->itemManager->flush();
-
         $ret = $this->itemManager->getRepository(User::class)
             ->query(
                 '#hometown = :hometown AND #wage > :wage',

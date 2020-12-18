@@ -68,6 +68,11 @@ class QueryConditionWrapper
     {
         $keyConditions = $this->normalizeOperatorInQuery($keyConditions);
         $keyConditions = $this->fulfillQueryString($keyConditions, $fieldsMapping, $paramsMapping);
+
+        /**
+         * - In ODM there is at most 2 attributes in index: hash-key, sort-key
+         * - The only logical operator in ODM is : AND
+         */
         $inx           = strpos($keyConditions, self:: AND);
         $ret           = [];
         if ($inx !== false) {

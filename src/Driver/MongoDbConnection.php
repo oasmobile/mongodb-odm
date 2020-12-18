@@ -108,7 +108,25 @@ class MongoDbConnection extends AbstractDbConnection
         $isAscendingOrder = true,
         $projectedFields = []
     ) {
-        // TODO: Implement queryAndRun() method.
+        $resultSet = $this->getDatabaseTable()->query(
+            $keyConditions,
+            $fieldsMapping,
+            $paramsMapping,
+            300
+        );
+
+        if (!empty($resultSet)) {
+            $stoppedByCallback = false;
+            foreach ($resultSet as $item) {
+                if ($stoppedByCallback === true) {
+                    return;
+                }
+                $ret = call_user_func($callback, $item);
+                if ($ret === false) {
+                    $stoppedByCallback = true;
+                }
+            }
+        }
     }
 
     public function queryCount(

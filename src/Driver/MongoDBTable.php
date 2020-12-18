@@ -47,7 +47,7 @@ class MongoDBTable
             ]
         );
 
-        $ret = $this->getArrayElements($doc);
+        $ret = $this->getArrayElements($doc,$lastId);
 
         if (empty($ret)) {
             return $ret;
@@ -102,31 +102,40 @@ class MongoDBTable
             ]
         );
 
-        return $this->getArrayElements($doc);
+        return $this->getArrayElements($doc,$lastId);
     }
 
     public function query(
         $keyConditions,
         array $fieldsMapping,
         array $paramsMapping,
-        $evaluationLimit = 30
+        $evaluationLimit,
+        &$lastId = 0
     ) {
+        $filter = (new QueryConditionWrapper(
+            $keyConditions,
+            $fieldsMapping,
+            $paramsMapping,
+            $this->itemReflection->getAttributeTypes()
+        ))->getFilter();
+
+        if (!empty($lastId)) {
+            $filter[] = [
+                '_id' => ['$gt' => $lastId],
+            ];
+        }
+
         $doc = $this->dbCollection->find(
-            (new QueryConditionWrapper(
-                $keyConditions,
-                $fieldsMapping,
-                $paramsMapping,
-                $this->itemReflection->getAttributeTypes()
-            ))->getFilter(),
+            $filter,
             [
                 'limit' => $evaluationLimit,
             ]
         );
 
-        return $this->getArrayElements($doc);
+        return $this->getArrayElements($doc, $lastId);
     }
 
-    protected function getArrayElements(Cursor $cursor)
+    protected function getArrayElements(Cursor $cursor, &$lastId)
     {
         if ($cursor === null) {
             return [];
@@ -143,6 +152,7 @@ class MongoDBTable
             /** @var BSONDocument $bsonDoc */
             $bsonDoc = $item;
             $ret     = $bsonDoc->exchangeArray([]);
+            $lastId  = $ret['_id'];
             unset($ret['_id']);
             $retList[] = $ret;
         }
