@@ -57,7 +57,7 @@ class MongoDBTable
         $ret = $this->getArrayElements($doc, $lastId);
 
         if (empty($ret)) {
-            return $ret;
+            return null;
         }
         else {
             return $ret[0];
