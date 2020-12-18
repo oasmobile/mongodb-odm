@@ -112,7 +112,12 @@ class MongoDBTable
         $evaluationLimit = 30
     ) {
         $doc = $this->dbCollection->find(
-            (new QueryConditionWrapper($keyConditions, $fieldsMapping, $paramsMapping))->getFilter(),
+            (new QueryConditionWrapper(
+                $keyConditions,
+                $fieldsMapping,
+                $paramsMapping,
+                $this->itemReflection->getAttributeTypes()
+            ))->getFilter(),
             [
                 'limit' => $evaluationLimit,
             ]

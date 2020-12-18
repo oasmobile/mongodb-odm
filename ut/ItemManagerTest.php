@@ -489,7 +489,7 @@ class ItemManagerTest extends TestCase
         $ret = $this->itemManager->getRepository(User::class)
             ->query(
                 '#hometown = :hometown AND #wage > :wage',
-                [':hometown' => 'NY', ':wage' => 100],
+                [':hometown' => 'NY', ':wage' => 100.01],
                 'hometown-salary-index'
             );
 

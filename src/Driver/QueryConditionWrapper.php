@@ -13,23 +13,9 @@ class QueryConditionWrapper
     public const AND     = '&&';
     public const BETWEEN = '^';
     //
-    protected $filter = [];
+    protected $filter         = [];
+    protected $attributeTypes = [];
 
-
-    /**
-     * QueryConditionWrapper constructor.
-     * @param $keyConditions
-     * @param  array  $fieldsMapping
-     * @param  array  $paramsMapping
-     */
-    public function __construct($keyConditions, array $fieldsMapping, array $paramsMapping)
-    {
-        $this->filter = $this->createFilterFromQueryConditions(
-            $keyConditions,
-            $fieldsMapping,
-            $paramsMapping
-        );
-    }
 
     public function getFilter()
     {
@@ -39,7 +25,6 @@ class QueryConditionWrapper
 
         return $this->filter;
     }
-
 
     protected function createFilterFromQueryConditions($keyConditions, array $fieldsMapping, array $paramsMapping)
     {
@@ -59,6 +44,24 @@ class QueryConditionWrapper
         }
 
         return $filter;
+    }
+
+
+    /**
+     * QueryConditionWrapper constructor.
+     * @param $keyConditions
+     * @param  array  $fieldsMapping
+     * @param  array  $paramsMapping
+     * @param  array  $attributeTypes
+     */
+    public function __construct($keyConditions, array $fieldsMapping, array $paramsMapping, array $attributeTypes)
+    {
+        $this->attributeTypes = $attributeTypes;
+        $this->filter         = $this->createFilterFromQueryConditions(
+            $keyConditions,
+            $fieldsMapping,
+            $paramsMapping
+        );
     }
 
     protected function explodeKeyConditions($keyConditions, array $fieldsMapping, array $paramsMapping)
@@ -131,6 +134,10 @@ class QueryConditionWrapper
     {
         $arr = explode($operator, $queryString);
 
+        if (count($arr) !== 2) {
+            throw new DataValidationException("Invalid compare expression: $queryString");
+        }
+
         switch ($operator) {
             case '=':
                 $mongoOperator = '$eq';
@@ -151,9 +158,11 @@ class QueryConditionWrapper
                 throw new DataValidationException("Unknown operator: $operator");
         }
 
+        $att = trim($arr[0]);
+
         return [
-            trim($arr[0]) => [
-                $mongoOperator => trim($arr[1]),
+            $att => [
+                $mongoOperator => $this->getTypedValue($arr[1], $att),
             ],
         ];
     }
@@ -169,12 +178,38 @@ class QueryConditionWrapper
             throw new DataValidationException("Invalid between compare expression: $queryString");
         }
 
+        $att = trim($arr[0]);
+
         return [
-            trim($arr[0]) => [
-                '$gte' => trim($val[0]),
-                '$lte' => trim($val[1]),
+            $att => [
+                '$gte' => $this->getTypedValue($val[0], $att),
+                '$lte' => $this->getTypedValue($val[1], $att),
             ],
         ];
+    }
+
+    protected function getTypedValue($val, $attribute)
+    {
+        $val  = trim($val);
+        $type = $this->attributeTypes[$attribute];
+        if (empty($type)) {
+            throw new DataValidationException("Unknown attribute: $attribute");
+        }
+
+        $getNumberValue = function ($val) {
+            if (strpos($val, '.') === false) {
+                return intval($val);
+            }
+
+            return floatval($val);
+        };
+
+        switch ($type) {
+            case 'number':
+                return $getNumberValue($val);
+            default:
+                return $val;
+        }
     }
 
 
