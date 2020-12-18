@@ -7,6 +7,7 @@ use MongoDB\Collection;
 use MongoDB\Driver\Cursor;
 use MongoDB\Model\BSONDocument;
 use Oasis\Mlib\ODM\Dynamodb\ItemReflection;
+use Oasis\Mlib\Utils\Exceptions\DataValidationException;
 
 /**
  * Class MongoDBTable
@@ -38,13 +39,19 @@ class MongoDBTable
         $this->attributeTypes = $itemReflection->getAttributeTypes();
     }
 
-    public function get(array $keys)
+    public function get(array $keys, $projectedFields = [])
     {
+        $options = [
+            'limit' => 1,
+        ];
+
+        if (!empty($projectedFields)) {
+            $options['projection'] = $this->getProjectionOption($projectedFields);
+        }
+
         $doc = $this->dbCollection->find(
             $keys,
-            [
-                'limit' => 1,
-            ]
+            $options
         );
 
         $ret = $this->getArrayElements($doc, $lastId);
@@ -171,6 +178,22 @@ class MongoDBTable
                 $this->itemReflection->getAttributeTypes()
             ))->getFilter()
         );
+    }
+
+    protected function getProjectionOption(array $projectedFields)
+    {
+        if (empty($projectedFields)) {
+            throw new DataValidationException("projected fields is empty");
+        }
+
+        $fields = array_values($projectedFields);
+        $ret    = [];
+
+        foreach ($fields as $field) {
+            $ret[$field] = true;
+        }
+
+        return $ret;
     }
 
 }
