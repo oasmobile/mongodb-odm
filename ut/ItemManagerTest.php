@@ -527,12 +527,12 @@ class ItemManagerTest extends TestCase
             );
     }
 
+    /**
+     * @depends testPersistAndGet
+     */
     public function testMultiQueryAndRunWithAttributeKey()
     {
-        //$this->markTestSkipped();
-
         $retCnt = 0;
-
         $this->itemManager->getRepository(User::class)->multiQueryAndRun(
             function (User $user) use (&$retCnt) {
                 $retCnt++;
@@ -545,7 +545,7 @@ class ItemManagerTest extends TestCase
                     ).PHP_EOL;
             },
             "hometown",
-            "NY",
+            ['NY', 'BJ'],
             "#age > :age",
             [":age" => 10],
             "home-age-gsi",
