@@ -47,7 +47,7 @@ class MongoDBTable
             ]
         );
 
-        $ret = $this->getArrayElements($doc,$lastId);
+        $ret = $this->getArrayElements($doc, $lastId);
 
         if (empty($ret)) {
             return $ret;
@@ -55,6 +55,31 @@ class MongoDBTable
         else {
             return $ret[0];
         }
+    }
+
+    protected function getArrayElements(Cursor $cursor, &$lastId)
+    {
+        if ($cursor === null) {
+            return [];
+        }
+
+        $arr = $cursor->toArray();
+
+        if (empty($arr)) {
+            return [];
+        }
+
+        $retList = [];
+        foreach ($arr as $item) {
+            /** @var BSONDocument $bsonDoc */
+            $bsonDoc = $item;
+            $ret     = $bsonDoc->exchangeArray([]);
+            $lastId  = $ret['_id'];
+            unset($ret['_id']);
+            $retList[] = $ret;
+        }
+
+        return $retList;
     }
 
     public function batchDelete(array $objs)
@@ -102,7 +127,7 @@ class MongoDBTable
             ]
         );
 
-        return $this->getArrayElements($doc,$lastId);
+        return $this->getArrayElements($doc, $lastId);
     }
 
     public function query(
@@ -135,29 +160,19 @@ class MongoDBTable
         return $this->getArrayElements($doc, $lastId);
     }
 
-    protected function getArrayElements(Cursor $cursor, &$lastId)
-    {
-        if ($cursor === null) {
-            return [];
-        }
-
-        $arr = $cursor->toArray();
-
-        if (empty($arr)) {
-            return [];
-        }
-
-        $retList = [];
-        foreach ($arr as $item) {
-            /** @var BSONDocument $bsonDoc */
-            $bsonDoc = $item;
-            $ret     = $bsonDoc->exchangeArray([]);
-            $lastId  = $ret['_id'];
-            unset($ret['_id']);
-            $retList[] = $ret;
-        }
-
-        return $retList;
+    public function queryCount(
+        $keyConditions,
+        array $fieldsMapping,
+        array $paramsMapping
+    ) {
+        return $this->dbCollection->countDocuments(
+            (new QueryConditionWrapper(
+                $keyConditions,
+                $fieldsMapping,
+                $paramsMapping,
+                $this->itemReflection->getAttributeTypes()
+            ))->getFilter()
+        );
     }
 
 }

@@ -495,7 +495,7 @@ class ItemManagerTest extends TestCase
         $usersNum = $this->itemManager->getRepository(User::class)
             ->queryCount(
                 '#hometown = :hometown AND #wage > :wage',
-                [':hometown' => 'new york', ':wage' => 100],
+                [':hometown' => 'NY', ':wage' => 100],
                 'hometown-salary-index'
             );
 
@@ -556,30 +556,6 @@ class ItemManagerTest extends TestCase
             'hometown-age-index'
         );
         $this->assertEquals(5, count($result));
-
-        $count = $this->itemManager->getRepository(User::class)->multiQueryCount(
-            "hometownPartition",
-            "NY".$base,
-            "#age > :age",
-            [":age" => 48],
-            "home-age-gsi"
-        );
-        $this->assertEquals(4, $count);
-
-        $result = [];
-        $this->itemManager->getRepository(User::class)->multiQueryAndRun(
-            function ($item) use (&$result) {
-                $result[] = $item;
-            },
-            "hometownPartition",
-            "NY".$base,
-            "#age > :age",
-            [":age" => 48],
-            "home-age-gsi",
-            "",
-            3
-        );
-        $this->assertEquals(3, count($result));
 
         // remove all inserted users
         $count = $this->itemManager->getRepository(User::class)->scanCount(

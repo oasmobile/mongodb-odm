@@ -108,25 +108,29 @@ class MongoDbConnection extends AbstractDbConnection
         $isAscendingOrder = true,
         $projectedFields = []
     ) {
-        $resultSet = $this->getDatabaseTable()->query(
-            $keyConditions,
-            $fieldsMapping,
-            $paramsMapping,
-            300
-        );
-
-        if (!empty($resultSet)) {
-            $stoppedByCallback = false;
-            foreach ($resultSet as $item) {
-                if ($stoppedByCallback === true) {
-                    return;
-                }
-                $ret = call_user_func($callback, $item);
-                if ($ret === false) {
-                    $stoppedByCallback = true;
+        $stoppedByCallback = false;
+        $lastId            = null;
+        do {
+            $resultSet = $this->getDatabaseTable()->query(
+                $keyConditions,
+                $fieldsMapping,
+                $paramsMapping,
+                300,
+                $lastId
+            );
+            if (!empty($resultSet)) {
+                $stoppedByCallback = false;
+                foreach ($resultSet as $item) {
+                    if ($stoppedByCallback === true) {
+                        return;
+                    }
+                    $ret = call_user_func($callback, $item);
+                    if ($ret === false) {
+                        $stoppedByCallback = true;
+                    }
                 }
             }
-        }
+        } while (!empty($resultSet) && $stoppedByCallback == true);
     }
 
     public function queryCount(
@@ -138,7 +142,11 @@ class MongoDbConnection extends AbstractDbConnection
         $isConsistentRead = false,
         $isAscendingOrder = true
     ) {
-        // TODO: Implement queryCount() method.
+        return $this->getDatabaseTable()->queryCount(
+            $keyConditions,
+            $fieldsMapping,
+            $paramsMapping
+        );
     }
 
     public function multiQueryAndRun(
@@ -156,7 +164,7 @@ class MongoDbConnection extends AbstractDbConnection
         $concurrency = 10,
         $projectedFields = []
     ) {
-        // TODO: Implement multiQueryAndRun() method.
+        throw new \Exception("No implement for this method");
     }
 
     public function scan(
@@ -170,7 +178,7 @@ class MongoDbConnection extends AbstractDbConnection
         $isAscendingOrder = true,
         $projectedFields = []
     ) {
-        // TODO: Implement scan() method.
+        throw new \Exception("No implement for this method");
     }
 
     public function scanAndRun(
@@ -183,7 +191,7 @@ class MongoDbConnection extends AbstractDbConnection
         $isAscendingOrder = true,
         $projectedFields = []
     ) {
-        // TODO: Implement scanAndRun() method.
+        throw new \Exception("No implement for this method");
     }
 
     public function parallelScanAndRun(
@@ -197,7 +205,7 @@ class MongoDbConnection extends AbstractDbConnection
         $isAscendingOrder = true,
         $projectedFields = []
     ) {
-        // TODO: Implement parallelScanAndRun() method.
+        throw new \Exception("No implement for this method");
     }
 
     public function scanCount(
@@ -208,6 +216,6 @@ class MongoDbConnection extends AbstractDbConnection
         $isConsistentRead = false,
         $parallel = 10
     ) {
-        // TODO: Implement scanCount() method.
+        throw new \Exception("No implement for this method");
     }
 }
