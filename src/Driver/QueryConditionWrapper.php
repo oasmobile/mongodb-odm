@@ -134,19 +134,19 @@ class QueryConditionWrapper
 
         switch ($operator) {
             case '=':
-                $mongoOperator = '$eq';
+                $comparisonOperator = '$eq';
                 break;
             case '>':
-                $mongoOperator = '$gt';
+                $comparisonOperator = '$gt';
                 break;
             case '>=':
-                $mongoOperator = '$gte';
+                $comparisonOperator = '$gte';
                 break;
             case '<':
-                $mongoOperator = '$lt';
+                $comparisonOperator = '$lt';
                 break;
             case '<=':
-                $mongoOperator = '$lte';
+                $comparisonOperator = '$lte';
                 break;
             default:
                 throw new DataValidationException("Unknown operator: $operator");
@@ -156,7 +156,7 @@ class QueryConditionWrapper
 
         return [
             $att => [
-                $mongoOperator => $this->getTypedValue($arr[1], $att),
+                $comparisonOperator => $this->getTypedValue($arr[1], $att),
             ],
         ];
     }

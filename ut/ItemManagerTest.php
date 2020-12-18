@@ -490,6 +490,9 @@ class ItemManagerTest extends TestCase
         $this->assertNotEmpty($ret);
     }
 
+    /**
+     * @depends testPersistAndGet
+     */
     public function testQueryCountWithAttributeKey()
     {
         $usersNum = $this->itemManager->getRepository(User::class)
@@ -500,6 +503,7 @@ class ItemManagerTest extends TestCase
             );
 
         $this->assertIsNumeric($usersNum);
+        $this->assertTrue(($usersNum > 0));
     }
 
     public function testQueryAndRunWithAttributeKey()
