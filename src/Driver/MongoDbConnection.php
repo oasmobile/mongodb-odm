@@ -93,7 +93,9 @@ class MongoDbConnection extends AbstractDbConnection
             $keyConditions,
             $fieldsMapping,
             $paramsMapping,
-            $evaluationLimit
+            $evaluationLimit,
+            $lastKey,
+            $projectedFields
         );
     }
 
@@ -116,7 +118,8 @@ class MongoDbConnection extends AbstractDbConnection
                 $fieldsMapping,
                 $paramsMapping,
                 300,
-                $lastId
+                $lastId,
+                $projectedFields
             );
             if (!empty($resultSet)) {
                 $stoppedByCallback = false;
@@ -175,7 +178,12 @@ class MongoDbConnection extends AbstractDbConnection
                 $callback,
                 "#{$hashKeyName} = :{$hashKeyName} AND {$rangeKeyConditions}",
                 $fieldsMapping,
-                $paramsMapping
+                $paramsMapping,
+                $indexName,
+                $filterExpression,
+                $isConsistentRead,
+                $isAscendingOrder,
+                $projectedFields
             );
         }
     }
@@ -195,7 +203,9 @@ class MongoDbConnection extends AbstractDbConnection
             $filterExpression,
             $fieldsMapping,
             $paramsMapping,
-            $evaluationLimit
+            $evaluationLimit,
+            $lastKey,
+            $projectedFields
         );
     }
 
@@ -213,7 +223,12 @@ class MongoDbConnection extends AbstractDbConnection
             $callback,
             $filterExpression,
             $fieldsMapping,
-            $paramsMapping
+            $paramsMapping,
+            $indexName,
+            '',
+            $isConsistentRead,
+            $isAscendingOrder,
+            $projectedFields
         );
     }
 
@@ -232,7 +247,12 @@ class MongoDbConnection extends AbstractDbConnection
             $callback,
             $filterExpression,
             $fieldsMapping,
-            $paramsMapping
+            $paramsMapping,
+            $indexName,
+            '',
+            $isConsistentRead,
+            $isAscendingOrder,
+            $projectedFields
         );
     }
 

@@ -142,7 +142,8 @@ class MongoDBTable
         array $fieldsMapping,
         array $paramsMapping,
         $evaluationLimit,
-        &$lastId = 0
+        &$lastId = 0,
+        $projectedFields = []
     ) {
         $filter = (new QueryConditionWrapper(
             $keyConditions,
@@ -151,15 +152,21 @@ class MongoDBTable
             $this->itemReflection->getAttributeTypes()
         ))->getFilter();
 
+        $options = [
+            'limit' => $evaluationLimit,
+        ];
+
         if (!empty($lastId)) {
             $filter['_id'] = ['$gt' => $lastId];
         }
 
+        if (!empty($projectedFields)) {
+            $options['projection'] = $this->getProjectionOption($projectedFields);
+        }
+
         $doc = $this->dbCollection->find(
             $filter,
-            [
-                'limit' => $evaluationLimit,
-            ]
+            $options
         );
 
         return $this->getArrayElements($doc, $lastId);
