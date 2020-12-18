@@ -16,14 +16,21 @@ class QueryConditionWrapper
     protected $filter         = [];
     protected $attributeTypes = [];
 
-
-    public function getFilter()
+    /**
+     * QueryConditionWrapper constructor.
+     * @param $keyConditions
+     * @param  array  $fieldsMapping
+     * @param  array  $paramsMapping
+     * @param  array  $attributeTypes
+     */
+    public function __construct($keyConditions, array $fieldsMapping, array $paramsMapping, array $attributeTypes)
     {
-        if (empty($this->filter)) {
-            throw new DataValidationException("Query condition is empty");
-        }
-
-        return $this->filter;
+        $this->attributeTypes = $attributeTypes;
+        $this->filter         = $this->createFilterFromQueryConditions(
+            $keyConditions,
+            $fieldsMapping,
+            $paramsMapping
+        );
     }
 
     protected function createFilterFromQueryConditions($keyConditions, array $fieldsMapping, array $paramsMapping)
@@ -44,24 +51,6 @@ class QueryConditionWrapper
         }
 
         return $filter;
-    }
-
-
-    /**
-     * QueryConditionWrapper constructor.
-     * @param $keyConditions
-     * @param  array  $fieldsMapping
-     * @param  array  $paramsMapping
-     * @param  array  $attributeTypes
-     */
-    public function __construct($keyConditions, array $fieldsMapping, array $paramsMapping, array $attributeTypes)
-    {
-        $this->attributeTypes = $attributeTypes;
-        $this->filter         = $this->createFilterFromQueryConditions(
-            $keyConditions,
-            $fieldsMapping,
-            $paramsMapping
-        );
     }
 
     protected function explodeKeyConditions($keyConditions, array $fieldsMapping, array $paramsMapping)
@@ -86,16 +75,6 @@ class QueryConditionWrapper
         return $ret;
     }
 
-    protected function fulfillQueryString($keyConditions, array $fieldsMapping, array $paramsMapping)
-    {
-        $replaceSearch  = array_keys($fieldsMapping);
-        $replaceReplace = array_values($fieldsMapping);
-        $replaceSearch  = array_merge($replaceSearch, array_keys($paramsMapping));
-        $replaceReplace = array_merge($replaceReplace, array_values($paramsMapping));
-
-        return str_replace($replaceSearch, $replaceReplace, $keyConditions);
-    }
-
     protected function normalizeOperatorInQuery($str)
     {
         return str_ireplace(
@@ -109,6 +88,16 @@ class QueryConditionWrapper
             ],
             $str
         );
+    }
+
+    protected function fulfillQueryString($keyConditions, array $fieldsMapping, array $paramsMapping)
+    {
+        $replaceSearch  = array_keys($fieldsMapping);
+        $replaceReplace = array_values($fieldsMapping);
+        $replaceSearch  = array_merge($replaceSearch, array_keys($paramsMapping));
+        $replaceReplace = array_merge($replaceReplace, array_values($paramsMapping));
+
+        return str_replace($replaceSearch, $replaceReplace, $keyConditions);
     }
 
     protected function transQueryStringToFilterElement($queryString)
@@ -172,27 +161,6 @@ class QueryConditionWrapper
         ];
     }
 
-    protected function getBetweenExpression($queryString)
-    {
-        $arr = explode(self::BETWEEN, $queryString);
-        if (count($arr) !== 2) {
-            throw new DataValidationException("Invalid between compare expression: $queryString");
-        }
-        $val = explode(self:: AND, $arr[1]);
-        if (count($val) !== 2) {
-            throw new DataValidationException("Invalid between compare expression: $queryString");
-        }
-
-        $att = trim($arr[0]);
-
-        return [
-            $att => [
-                '$gte' => $this->getTypedValue($val[0], $att),
-                '$lte' => $this->getTypedValue($val[1], $att),
-            ],
-        ];
-    }
-
     protected function getTypedValue($val, $attribute)
     {
         $val  = trim($val);
@@ -215,6 +183,36 @@ class QueryConditionWrapper
             default:
                 return $val;
         }
+    }
+
+    protected function getBetweenExpression($queryString)
+    {
+        $arr = explode(self::BETWEEN, $queryString);
+        if (count($arr) !== 2) {
+            throw new DataValidationException("Invalid between compare expression: $queryString");
+        }
+        $val = explode(self:: AND, $arr[1]);
+        if (count($val) !== 2) {
+            throw new DataValidationException("Invalid between compare expression: $queryString");
+        }
+
+        $att = trim($arr[0]);
+
+        return [
+            $att => [
+                '$gte' => $this->getTypedValue($val[0], $att),
+                '$lte' => $this->getTypedValue($val[1], $att),
+            ],
+        ];
+    }
+
+    public function getFilter()
+    {
+        if (empty($this->filter)) {
+            throw new DataValidationException("Query condition is empty");
+        }
+
+        return $this->filter;
     }
 
 
