@@ -6,6 +6,7 @@ use MongoDB\Client;
 use MongoDB\Collection;
 use MongoDB\Driver\Cursor;
 use MongoDB\Model\BSONDocument;
+use Oasis\Mlib\ODM\Dynamodb\Exceptions\DataConsistencyException;
 use Oasis\Mlib\ODM\Dynamodb\ItemReflection;
 use Oasis\Mlib\Utils\Exceptions\DataValidationException;
 
@@ -64,6 +65,22 @@ class MongoDBTable
         }
     }
 
+    protected function getProjectionOption(array $projectedFields)
+    {
+        if (empty($projectedFields)) {
+            throw new DataValidationException("projected fields is empty");
+        }
+
+        $fields = array_values($projectedFields);
+        $ret    = [];
+
+        foreach ($fields as $field) {
+            $ret[$field] = true;
+        }
+
+        return $ret;
+    }
+
     protected function getArrayElements(Cursor $cursor, &$lastId)
     {
         if ($cursor === null) {
@@ -111,19 +128,29 @@ class MongoDBTable
 
     public function set(array $obj, $checkValues = [])
     {
-        $this->dbCollection->findOneAndUpdate(
-            $this->itemReflection->getPrimaryKeys($obj),
+        $filter = $this->itemReflection->getPrimaryKeys($obj);
+        $upsert = true;
+        $cv     = $this->getCheckValues($checkValues);
+        if (!empty($cv)) {
+            $filter = array_merge($filter, $cv);
+            $upsert = false;
+        }
+
+        $ret = $this->dbCollection->findOneAndUpdate(
+            $filter,
             [
                 '$set' => $obj,
             ],
             [
-                'upsert' => true,
-                'todo'   => $checkValues  // remove later
+                'upsert' => $upsert,
             ]
         );
 
-        // todo: implement check and set
-        return true;
+        if (!empty($cv) && $ret == null) {
+            throw new DataConsistencyException();
+        }
+
+        return $ret;
     }
 
     public function batchGet(array $keys)
@@ -187,20 +214,19 @@ class MongoDBTable
         );
     }
 
-    protected function getProjectionOption(array $projectedFields)
+    protected function getCheckValues($checkValues)
     {
-        if (empty($projectedFields)) {
-            throw new DataValidationException("projected fields is empty");
+        if (empty($checkValues)) {
+            return [];
         }
 
-        $fields = array_values($projectedFields);
-        $ret    = [];
-
-        foreach ($fields as $field) {
-            $ret[$field] = true;
+        foreach ($checkValues as $key => $value) {
+            if ($value === null) {
+                return [];
+            }
         }
 
-        return $ret;
+        return $checkValues;
     }
 
 }
