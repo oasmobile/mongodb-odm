@@ -150,6 +150,7 @@ class ItemManagerTest extends TestCase
      */
     public function testCreatingInconsistentData($id)
     {
+        $this->markTestSkipped();
         /** @var User $user */
         $user = $this->itemManager->get(User::class, ['id' => $id]);
         $this->itemManager->clear();

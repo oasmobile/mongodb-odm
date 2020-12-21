@@ -87,20 +87,33 @@ class MongoDBTable
             return [];
         }
 
-        $arr = $cursor->toArray();
+        $arr     = $cursor->toArray();
+        $retList = [];
 
         if (empty($arr)) {
-            return [];
+            return $retList;
         }
 
-        $retList = [];
+        /* function to normalize raw data */
+        $normalizeValue = function ($valItem) use (&$normalizeValue) {
+            if ($valItem instanceof \ArrayObject) {
+                $valItem = $valItem->exchangeArray([]);
+            }
+
+            if(is_array($valItem)) {
+                $valItem = array_map($normalizeValue,$valItem);
+            }
+
+            return $valItem;
+        };
+
         foreach ($arr as $item) {
             /** @var BSONDocument $bsonDoc */
             $bsonDoc = $item;
             $ret     = $bsonDoc->exchangeArray([]);
             $lastId  = $ret['_id'];
             unset($ret['_id']);
-            $retList[] = $ret;
+            $retList[] = array_map($normalizeValue, $ret);
         }
 
         return $retList;
