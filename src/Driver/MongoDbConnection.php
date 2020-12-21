@@ -5,6 +5,7 @@ namespace Oasis\Mlib\ODM\MongoDB\Driver;
 use Oasis\Mlib\ODM\Dynamodb\DBAL\Drivers\AbstractDbConnection;
 use Oasis\Mlib\ODM\Dynamodb\Exceptions\ODMException;
 use Oasis\Mlib\ODM\Dynamodb\ItemManager;
+use Oasis\Mlib\ODM\MongoDB\Schema\MongoDBSchemaTool;
 
 /**
  * Class MongoDbConnection
@@ -42,7 +43,7 @@ class MongoDbConnection extends AbstractDbConnection
      */
     public function getSchemaTool(ItemManager $im, $classReflections, callable $outputFunction = null)
     {
-        // TODO: Implement getSchemaTool() method.
+        return (new MongoDBSchemaTool($im, $classReflections, $outputFunction))->setDbConfig($this->dbConfig);
     }
 
     public function batchGet(
@@ -74,7 +75,7 @@ class MongoDbConnection extends AbstractDbConnection
 
     public function get(array $keys, $is_consistent_read = false, $projectedFields = [])
     {
-        return $this->getDatabaseTable()->get($keys);
+        return $this->getDatabaseTable()->get($keys, $projectedFields);
     }
 
     public function query(
@@ -93,7 +94,9 @@ class MongoDbConnection extends AbstractDbConnection
             $keyConditions,
             $fieldsMapping,
             $paramsMapping,
-            $evaluationLimit
+            $evaluationLimit,
+            $lastKey,
+            $projectedFields
         );
     }
 
@@ -116,7 +119,8 @@ class MongoDbConnection extends AbstractDbConnection
                 $fieldsMapping,
                 $paramsMapping,
                 300,
-                $lastId
+                $lastId,
+                $projectedFields
             );
             if (!empty($resultSet)) {
                 $stoppedByCallback = false;
@@ -164,7 +168,25 @@ class MongoDbConnection extends AbstractDbConnection
         $concurrency = 10,
         $projectedFields = []
     ) {
-        throw new \Exception("No implement for this method");
+        if (!is_array($hashKeyValues)) {
+            $hashKeyValues = [$hashKeyValues];
+        }
+
+        foreach ($hashKeyValues as $hashKeyValue) {
+            $paramsMapping[":{$hashKeyName}"] = $hashKeyValue;
+            $fieldsMapping["#{$hashKeyName}"] = $hashKeyName;
+            $this->queryAndRun(
+                $callback,
+                "#{$hashKeyName} = :{$hashKeyName} AND {$rangeKeyConditions}",
+                $fieldsMapping,
+                $paramsMapping,
+                $indexName,
+                $filterExpression,
+                $isConsistentRead,
+                $isAscendingOrder,
+                $projectedFields
+            );
+        }
     }
 
     public function scan(
@@ -178,7 +200,14 @@ class MongoDbConnection extends AbstractDbConnection
         $isAscendingOrder = true,
         $projectedFields = []
     ) {
-        throw new \Exception("No implement for this method");
+        return $this->getDatabaseTable()->query(
+            $filterExpression,
+            $fieldsMapping,
+            $paramsMapping,
+            $evaluationLimit,
+            $lastKey,
+            $projectedFields
+        );
     }
 
     public function scanAndRun(
@@ -191,7 +220,17 @@ class MongoDbConnection extends AbstractDbConnection
         $isAscendingOrder = true,
         $projectedFields = []
     ) {
-        throw new \Exception("No implement for this method");
+        $this->queryAndRun(
+            $callback,
+            $filterExpression,
+            $fieldsMapping,
+            $paramsMapping,
+            $indexName,
+            '',
+            $isConsistentRead,
+            $isAscendingOrder,
+            $projectedFields
+        );
     }
 
     public function parallelScanAndRun(
@@ -205,7 +244,17 @@ class MongoDbConnection extends AbstractDbConnection
         $isAscendingOrder = true,
         $projectedFields = []
     ) {
-        throw new \Exception("No implement for this method");
+        $this->queryAndRun(
+            $callback,
+            $filterExpression,
+            $fieldsMapping,
+            $paramsMapping,
+            $indexName,
+            '',
+            $isConsistentRead,
+            $isAscendingOrder,
+            $projectedFields
+        );
     }
 
     public function scanCount(
@@ -216,6 +265,10 @@ class MongoDbConnection extends AbstractDbConnection
         $isConsistentRead = false,
         $parallel = 10
     ) {
-        throw new \Exception("No implement for this method");
+        return $this->getDatabaseTable()->queryCount(
+            $filterExpression,
+            $fieldsMapping,
+            $paramsMapping
+        );
     }
 }

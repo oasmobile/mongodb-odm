@@ -6,7 +6,9 @@ use MongoDB\Client;
 use MongoDB\Collection;
 use MongoDB\Driver\Cursor;
 use MongoDB\Model\BSONDocument;
+use Oasis\Mlib\ODM\Dynamodb\Exceptions\DataConsistencyException;
 use Oasis\Mlib\ODM\Dynamodb\ItemReflection;
+use Oasis\Mlib\Utils\Exceptions\DataValidationException;
 
 /**
  * Class MongoDBTable
@@ -38,23 +40,45 @@ class MongoDBTable
         $this->attributeTypes = $itemReflection->getAttributeTypes();
     }
 
-    public function get(array $keys)
+    public function get(array $keys, $projectedFields = [])
     {
+        $options = [
+            'limit' => 1,
+        ];
+
+        if (!empty($projectedFields)) {
+            $options['projection'] = $this->getProjectionOption($projectedFields);
+        }
+
         $doc = $this->dbCollection->find(
             $keys,
-            [
-                'limit' => 1,
-            ]
+            $options
         );
 
         $ret = $this->getArrayElements($doc, $lastId);
 
         if (empty($ret)) {
-            return $ret;
+            return null;
         }
         else {
             return $ret[0];
         }
+    }
+
+    protected function getProjectionOption(array $projectedFields)
+    {
+        if (empty($projectedFields)) {
+            throw new DataValidationException("projected fields is empty");
+        }
+
+        $fields = array_values($projectedFields);
+        $ret    = [];
+
+        foreach ($fields as $field) {
+            $ret[$field] = true;
+        }
+
+        return $ret;
     }
 
     protected function getArrayElements(Cursor $cursor, &$lastId)
@@ -63,20 +87,33 @@ class MongoDBTable
             return [];
         }
 
-        $arr = $cursor->toArray();
+        $arr     = $cursor->toArray();
+        $retList = [];
 
         if (empty($arr)) {
-            return [];
+            return $retList;
         }
 
-        $retList = [];
+        /* function to normalize raw data */
+        $normalizeValue = function ($valItem) use (&$normalizeValue) {
+            if ($valItem instanceof \ArrayObject) {
+                $valItem = $valItem->exchangeArray([]);
+            }
+
+            if(is_array($valItem)) {
+                $valItem = array_map($normalizeValue,$valItem);
+            }
+
+            return $valItem;
+        };
+
         foreach ($arr as $item) {
             /** @var BSONDocument $bsonDoc */
             $bsonDoc = $item;
             $ret     = $bsonDoc->exchangeArray([]);
             $lastId  = $ret['_id'];
             unset($ret['_id']);
-            $retList[] = $ret;
+            $retList[] = array_map($normalizeValue, $ret);
         }
 
         return $retList;
@@ -104,19 +141,29 @@ class MongoDBTable
 
     public function set(array $obj, $checkValues = [])
     {
-        $this->dbCollection->findOneAndUpdate(
-            $this->itemReflection->getPrimaryKeys($obj),
+        $filter = $this->itemReflection->getPrimaryKeys($obj);
+        $upsert = true;
+        $cv     = $this->getCheckValues($checkValues);
+        if (!empty($cv)) {
+            $filter = array_merge($filter, $cv);
+            $upsert = false;
+        }
+
+        $ret = $this->dbCollection->findOneAndUpdate(
+            $filter,
             [
                 '$set' => $obj,
             ],
             [
-                'upsert' => true,
-                'todo'   => $checkValues  // remove later
+                'upsert' => $upsert,
             ]
         );
 
-        // todo: implement check and set
-        return true;
+        if (!empty($cv) && $ret == null) {
+            throw new DataConsistencyException();
+        }
+
+        return $ret;
     }
 
     public function batchGet(array $keys)
@@ -135,7 +182,8 @@ class MongoDBTable
         array $fieldsMapping,
         array $paramsMapping,
         $evaluationLimit,
-        &$lastId = 0
+        &$lastId = 0,
+        $projectedFields = []
     ) {
         $filter = (new QueryConditionWrapper(
             $keyConditions,
@@ -144,15 +192,21 @@ class MongoDBTable
             $this->itemReflection->getAttributeTypes()
         ))->getFilter();
 
+        $options = [
+            'limit' => $evaluationLimit,
+        ];
+
         if (!empty($lastId)) {
             $filter['_id'] = ['$gt' => $lastId];
         }
 
+        if (!empty($projectedFields)) {
+            $options['projection'] = $this->getProjectionOption($projectedFields);
+        }
+
         $doc = $this->dbCollection->find(
             $filter,
-            [
-                'limit' => $evaluationLimit,
-            ]
+            $options
         );
 
         return $this->getArrayElements($doc, $lastId);
@@ -171,6 +225,21 @@ class MongoDBTable
                 $this->itemReflection->getAttributeTypes()
             ))->getFilter()
         );
+    }
+
+    protected function getCheckValues($checkValues)
+    {
+        if (empty($checkValues)) {
+            return [];
+        }
+
+        foreach ($checkValues as $key => $value) {
+            if ($value === null) {
+                return [];
+            }
+        }
+
+        return $checkValues;
     }
 
 }

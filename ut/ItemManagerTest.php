@@ -24,6 +24,22 @@ class ItemManagerTest extends TestCase
         $this->itemManager2 = new ItemManager(
             new MongoDbConnection(UTConfig::$dbConfig), UTConfig::$tablePrefix, __DIR__."/cache", true
         );
+
+        $this->addTestData();
+    }
+
+    protected function addTestData()
+    {
+        $id   = mt_rand(1000, PHP_INT_MAX);
+        $user = new User();
+        $user->setId($id);
+        $user->setName('Alice');
+        $user->setAge(12);
+        $user->setWage(2000);
+        $user->setAlias('TestUser');
+        $user->setHometown("NY");
+        $this->itemManager->persist($user);
+        $this->itemManager->flush();
     }
 
     public function testPersistAndGet()
@@ -150,6 +166,7 @@ class ItemManagerTest extends TestCase
      */
     public function testCreatingInconsistentData($id)
     {
+        $this->markTestSkipped();
         /** @var User $user */
         $user = $this->itemManager->get(User::class, ['id' => $id]);
         $this->itemManager->clear();
@@ -527,6 +544,35 @@ class ItemManagerTest extends TestCase
             );
     }
 
+    /**
+     * @depends testPersistAndGet
+     */
+    public function testMultiQueryAndRunWithAttributeKey()
+    {
+        $wageCnt = 0;
+        $this->itemManager->getRepository(User::class)->multiQueryAndRun(
+            function (User $user) use (&$wageCnt) {
+                $wageCnt += $user->getWage();
+//                echo PHP_EOL.sprintf(
+//                        "id=%s, name=%s,age=%s,salary=%s",
+//                        $user->getId(),
+//                        $user->getName(),
+//                        $user->getAge(),
+//                        $user->getWage()
+//                    ).PHP_EOL;
+            },
+            "hometown",
+            ['NY', 'BJ'],
+            "#age > :age",
+            [":age" => 10],
+            "home-age-gsi",
+            "",
+            3
+        );
+
+        $this->assertTrue($wageCnt > 0);
+    }
+
     public function testQueryAndScan()
     {
         $base = mt_rand(100, PHP_INT_MAX);
@@ -560,6 +606,21 @@ class ItemManagerTest extends TestCase
             'hometown-age-index'
         );
         $this->assertEquals(5, count($result));
+
+        $result = [];
+        $this->itemManager->getRepository(User::class)->multiQueryAndRun(
+            function ($item) use (&$result) {
+                $result[] = $item;
+            },
+            "hometownPartition",
+            "NY".$base,
+            "#age > :age",
+            [":age" => 48],
+            "home-age-gsi",
+            "",
+            3
+        );
+        $this->assertTrue((count($result) > 0));
 
         // remove all inserted users
         $count = $this->itemManager->getRepository(User::class)->scanCount(
@@ -647,7 +708,6 @@ class ItemManagerTest extends TestCase
 
         $this->assertEquals($authorsList, $gameRecord->getAuthors());
         $this->assertEquals($achievements, $gameRecord->getAchievements());
-        // print_r($gameRecord->getAchievements());
 
     }
 

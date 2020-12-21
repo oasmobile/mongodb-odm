@@ -55,6 +55,10 @@ class QueryConditionWrapper
 
     protected function explodeKeyConditions($keyConditions, array $fieldsMapping, array $paramsMapping)
     {
+        if (empty($keyConditions)) {
+            return [];
+        }
+
         $keyConditions = $this->normalizeOperatorInQuery($keyConditions);
         $keyConditions = $this->fulfillQueryString($keyConditions, $fieldsMapping, $paramsMapping);
 
@@ -62,8 +66,8 @@ class QueryConditionWrapper
          * - In ODM there is at most 2 attributes in index: hash-key, sort-key
          * - The only logical operator in ODM is : AND
          */
-        $inx           = strpos($keyConditions, self:: AND);
-        $ret           = [];
+        $inx = strpos($keyConditions, self:: AND);
+        $ret = [];
         if ($inx !== false) {
             $ret[] = trim(substr($keyConditions, 0, $inx));
             $ret[] = trim(substr($keyConditions, $inx + strlen(self:: AND)));
@@ -209,7 +213,7 @@ class QueryConditionWrapper
     public function getFilter()
     {
         if (empty($this->filter)) {
-            throw new DataValidationException("Query condition is empty");
+            $this->filter = [];
         }
 
         return $this->filter;
