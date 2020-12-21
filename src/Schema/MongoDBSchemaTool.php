@@ -34,6 +34,10 @@ class MongoDBSchemaTool extends AbstractSchemaTool
         $this->updateTableSchemas(false, $isDryRun);
     }
 
+    /**
+     * !! Attention
+     * Drop table command is so danger we only provided in develop environment
+     */
     public function dropSchema()
     {
         if ($this->getDBManager()->isDebug() !== true) {
@@ -46,7 +50,7 @@ class MongoDBSchemaTool extends AbstractSchemaTool
 
         /** @var CollectionInfo $mongoTable */
         foreach ($mongoTables as $mongoTable) {
-            $this->outputWrite("start to drop table: {$mongoTable->getName()} ...");
+            $this->outputWrite("Will drop table: {$mongoTable->getName()}");
             $this->getDBManager()->dropTable($mongoTable->getName());
         }
 
