@@ -24,6 +24,22 @@ class ItemManagerTest extends TestCase
         $this->itemManager2 = new ItemManager(
             new MongoDbConnection(UTConfig::$dbConfig), UTConfig::$tablePrefix, __DIR__."/cache", true
         );
+
+        $this->addTestData();
+    }
+
+    protected function addTestData()
+    {
+        $id   = mt_rand(1000, PHP_INT_MAX);
+        $user = new User();
+        $user->setId($id);
+        $user->setName('Alice');
+        $user->setAge(12);
+        $user->setWage(2000);
+        $user->setAlias('TestUser');
+        $user->setHometown("NY");
+        $this->itemManager->persist($user);
+        $this->itemManager->flush();
     }
 
     public function testPersistAndGet()
@@ -533,17 +549,17 @@ class ItemManagerTest extends TestCase
      */
     public function testMultiQueryAndRunWithAttributeKey()
     {
-        $retCnt = 0;
+        $wageCnt = 0;
         $this->itemManager->getRepository(User::class)->multiQueryAndRun(
-            function (User $user) use (&$retCnt) {
-                $retCnt++;
-                echo PHP_EOL.sprintf(
-                        "id=%s, name=%s,age=%s,salary=%s",
-                        $user->getId(),
-                        $user->getName(),
-                        $user->getAge(),
-                        $user->getWage()
-                    ).PHP_EOL;
+            function (User $user) use (&$wageCnt) {
+                $wageCnt += $user->getWage();
+//                echo PHP_EOL.sprintf(
+//                        "id=%s, name=%s,age=%s,salary=%s",
+//                        $user->getId(),
+//                        $user->getName(),
+//                        $user->getAge(),
+//                        $user->getWage()
+//                    ).PHP_EOL;
             },
             "hometown",
             ['NY', 'BJ'],
@@ -554,7 +570,7 @@ class ItemManagerTest extends TestCase
             3
         );
 
-        $this->assertTrue($retCnt > 0);
+        $this->assertTrue($wageCnt > 0);
     }
 
     public function testQueryAndScan()
@@ -692,7 +708,6 @@ class ItemManagerTest extends TestCase
 
         $this->assertEquals($authorsList, $gameRecord->getAuthors());
         $this->assertEquals($achievements, $gameRecord->getAchievements());
-        // print_r($gameRecord->getAchievements());
 
     }
 
