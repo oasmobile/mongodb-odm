@@ -5,6 +5,7 @@ namespace Oasis\Mlib\ODM\MongoDB\Driver;
 use Oasis\Mlib\ODM\Dynamodb\DBAL\Drivers\AbstractDbConnection;
 use Oasis\Mlib\ODM\Dynamodb\Exceptions\ODMException;
 use Oasis\Mlib\ODM\Dynamodb\ItemManager;
+use Oasis\Mlib\ODM\MongoDB\Schema\MongoDBSchemaTool;
 
 /**
  * Class MongoDbConnection
@@ -42,7 +43,7 @@ class MongoDbConnection extends AbstractDbConnection
      */
     public function getSchemaTool(ItemManager $im, $classReflections, callable $outputFunction = null)
     {
-        // TODO: Implement getSchemaTool() method.
+        return (new MongoDBSchemaTool($im, $classReflections, $outputFunction))->setDbConfig($this->dbConfig);
     }
 
     public function batchGet(
