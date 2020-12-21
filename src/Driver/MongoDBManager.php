@@ -55,7 +55,7 @@ class MongoDBManager
 
         /** @var CollectionInfo $item */
         foreach ($collections as $item) {
-            $tableList[] = $this->createTableWithCollection($item);
+            $tableList[$item->getName()] = $this->createTableWithCollection($item);
         }
 
         return $tableList;
@@ -70,6 +70,10 @@ class MongoDBManager
         $table->setName($item->getName());
 
         foreach ($indexList as $indexInfo) {
+            if ($indexInfo->getName() == '_id_') {
+                continue;
+            }
+
             $table->appendIndex(
                 (new Index())
                     ->setName($indexInfo->getName())
