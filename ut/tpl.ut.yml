@@ -1,4 +1,4 @@
 mongodb-odm:
     endpoint: 'mongodb://127.0.0.1/'
-    database: 'oas-test'
-    prefix: odm-ut-
+    database: 'odm-ut-zxc'
+    prefix:
