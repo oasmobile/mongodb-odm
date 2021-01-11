@@ -129,7 +129,7 @@ class MongoDBSchemaTool extends AbstractSchemaTool
 
             if (!empty($reflection->getItemDefinition()->primaryIndex->range)) {
                 $primaryKeyColumns[] = $reflection->getFieldNameByPropertyName(
-                    $reflection->getItemDefinition()->primaryIndex->hash
+                    $reflection->getItemDefinition()->primaryIndex->range
                 );
             }
 
