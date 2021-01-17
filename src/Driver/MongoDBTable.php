@@ -94,30 +94,30 @@ class MongoDBTable
             return $retList;
         }
 
-        /* function to normalize raw data */
-        $normalizeValue = function ($valItem) use (&$normalizeValue) {
-            if ($valItem instanceof \ArrayObject) {
-                $valItem = $valItem->exchangeArray([]);
-            }
-
-            if(is_array($valItem)) {
-                $valItem = array_map($normalizeValue,$valItem);
-            }
-
-            return $valItem;
-        };
-
-        foreach ($arr as $item) {
-            /** @var BSONDocument $bsonDoc */
-            $bsonDoc = $item;
-            $ret     = $bsonDoc->exchangeArray([]);
-            $lastId  = $ret['_id'];
+        /** @var BSONDocument $bsonDoc */
+        foreach ($arr as $bsonDoc) {
+            $ret    = $bsonDoc->exchangeArray([]);
+            $lastId = $ret['_id'];
             unset($ret['_id']);
-            $retList[] = array_map($normalizeValue, $ret);
+            $retList[] = array_map([$this, 'cbNormalizeBsonDc'], $ret);
         }
 
         return $retList;
     }
+
+    protected function cbNormalizeBsonDc($valItem)
+    {
+        if ($valItem instanceof \ArrayObject) {
+            $valItem = $valItem->exchangeArray([]);
+        }
+
+        if (is_array($valItem)) {
+            $valItem = array_map([$this,'cbNormalizeBsonDc'], $valItem);
+        }
+
+        return $valItem;
+    }
+
 
     public function batchDelete(array $objs)
     {
