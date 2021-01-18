@@ -28,6 +28,7 @@ class MongoDBTable
     /** @var Collection */
     private $dbCollection;
 
+    private $queryLastRawId = null;
 
     public function __construct(array $dbConfig, $tableName, ItemReflection $itemReflection)
     {
@@ -38,6 +39,19 @@ class MongoDBTable
         $this->tableName      = $tableName;
         $this->itemReflection = $itemReflection;
         $this->attributeTypes = $itemReflection->getAttributeTypes();
+    }
+
+    /**
+     */
+    public function getQueryLastRawId()
+    {
+        return $this->queryLastRawId;
+    }
+
+
+    public function setQueryLastRawId($queryLastRawId)
+    {
+        $this->queryLastRawId = $queryLastRawId;
     }
 
     public function get(array $keys, $projectedFields = [])
@@ -55,7 +69,7 @@ class MongoDBTable
             $options
         );
 
-        $ret = $this->getArrayElements($doc, $lastId);
+        $ret = $this->getArrayElements($doc);
 
         if (empty($ret)) {
             return null;
@@ -81,7 +95,7 @@ class MongoDBTable
         return $ret;
     }
 
-    protected function getArrayElements(Cursor $cursor, &$lastId)
+    protected function getArrayElements(Cursor $cursor, $saveLastRowId = false)
     {
         if ($cursor === null) {
             return [];
@@ -96,28 +110,16 @@ class MongoDBTable
 
         /** @var BSONDocument $bsonDoc */
         foreach ($arr as $bsonDoc) {
-            $ret    = $bsonDoc->exchangeArray([]);
-            $lastId = $ret['_id'];
+            $ret = $bsonDoc->exchangeArray([]);
+            if ($saveLastRowId) {
+                $this->queryLastRawId = $ret['_id'];
+            }
             unset($ret['_id']);
             $retList[] = array_map([$this, 'cbNormalizeBsonDc'], $ret);
         }
 
         return $retList;
     }
-
-    protected function cbNormalizeBsonDc($valItem)
-    {
-        if ($valItem instanceof \ArrayObject) {
-            $valItem = $valItem->exchangeArray([]);
-        }
-
-        if (is_array($valItem)) {
-            $valItem = array_map([$this,'cbNormalizeBsonDc'], $valItem);
-        }
-
-        return $valItem;
-    }
-
 
     public function batchDelete(array $objs)
     {
@@ -166,6 +168,21 @@ class MongoDBTable
         return $ret;
     }
 
+    protected function getCheckValues($checkValues)
+    {
+        if (empty($checkValues)) {
+            return [];
+        }
+
+        foreach ($checkValues as $key => $value) {
+            if ($value === null) {
+                return [];
+            }
+        }
+
+        return $checkValues;
+    }
+
     public function batchGet(array $keys)
     {
         $doc = $this->dbCollection->find(
@@ -174,7 +191,7 @@ class MongoDBTable
             ]
         );
 
-        return $this->getArrayElements($doc, $lastId);
+        return $this->getArrayElements($doc);
     }
 
     public function query(
@@ -182,8 +199,8 @@ class MongoDBTable
         array $fieldsMapping,
         array $paramsMapping,
         $evaluationLimit,
-        &$lastId = 0,
-        $projectedFields = []
+        $projectedFields = [],
+        $saveLastRowId = false
     ) {
         $filter = (new QueryConditionWrapper(
             $keyConditions,
@@ -196,8 +213,8 @@ class MongoDBTable
             'limit' => $evaluationLimit,
         ];
 
-        if (!empty($lastId)) {
-            $filter['_id'] = ['$gt' => $lastId];
+        if (!empty($this->queryLastRawId)) {
+            $filter['_id'] = ['$gt' => $this->queryLastRawId];
         }
 
         if (!empty($projectedFields)) {
@@ -209,7 +226,7 @@ class MongoDBTable
             $options
         );
 
-        return $this->getArrayElements($doc, $lastId);
+        return $this->getArrayElements($doc, $saveLastRowId);
     }
 
     public function queryCount(
@@ -227,19 +244,17 @@ class MongoDBTable
         );
     }
 
-    protected function getCheckValues($checkValues)
+    protected function cbNormalizeBsonDc($valItem)
     {
-        if (empty($checkValues)) {
-            return [];
+        if ($valItem instanceof \ArrayObject) {
+            $valItem = $valItem->exchangeArray([]);
         }
 
-        foreach ($checkValues as $key => $value) {
-            if ($value === null) {
-                return [];
-            }
+        if (is_array($valItem)) {
+            $valItem = array_map([$this, 'cbNormalizeBsonDc'], $valItem);
         }
 
-        return $checkValues;
+        return $valItem;
     }
 
 }

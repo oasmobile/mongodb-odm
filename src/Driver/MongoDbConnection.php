@@ -95,7 +95,6 @@ class MongoDbConnection extends AbstractDbConnection
             $fieldsMapping,
             $paramsMapping,
             $evaluationLimit,
-            $lastKey,
             $projectedFields
         );
     }
@@ -112,15 +111,15 @@ class MongoDbConnection extends AbstractDbConnection
         $projectedFields = []
     ) {
         $stoppedByCallback = false;
-        $lastId            = null;
+        $this->getDatabaseTable()->setQueryLastRawId(null);
         do {
             $resultSet = $this->getDatabaseTable()->query(
                 $keyConditions,
                 $fieldsMapping,
                 $paramsMapping,
                 300,
-                $lastId,
-                $projectedFields
+                $projectedFields,
+                true
             );
             if (!empty($resultSet)) {
                 $stoppedByCallback = false;
