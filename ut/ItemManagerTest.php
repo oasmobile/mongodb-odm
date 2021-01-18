@@ -526,10 +526,11 @@ class ItemManagerTest extends TestCase
     public function testQueryAndRunWithAttributeKey()
     {
         $this->markTestSkipped();
-
+        $hasResult = false;
         $this->itemManager->getRepository(User::class)
             ->queryAndRun(
-                function (User $user) {
+                function (User $user) use (&$hasResult) {
+                    $hasResult = true;
                     echo PHP_EOL.sprintf(
                             "id=%s, name=%s,age=%s,salary=%s",
                             $user->getId(),
@@ -542,6 +543,8 @@ class ItemManagerTest extends TestCase
                 [':hometown' => 'NY', ':wage' => 100],
                 'hometown-salary-index'
             );
+
+        $this->assertTrue($hasResult);
     }
 
     /**
