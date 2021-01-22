@@ -134,6 +134,7 @@ class MongoDbConnection extends AbstractDbConnection
                 }
             }
         } while (!empty($resultSet) && $stoppedByCallback === false);
+        $this->getDatabaseTable()->setQueryLastRawId(null);
     }
 
     public function queryCount(
