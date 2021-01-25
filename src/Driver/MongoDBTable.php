@@ -211,6 +211,7 @@ class MongoDBTable
 
         $options = [
             'limit' => $evaluationLimit,
+            'sort'  => ['_id' => 1],
         ];
 
         if (!empty($this->queryLastRawId)) {
