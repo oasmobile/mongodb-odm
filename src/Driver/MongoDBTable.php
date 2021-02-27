@@ -2,6 +2,7 @@
 
 namespace Oasis\Mlib\ODM\MongoDB\Driver;
 
+use MongoDB\BSON\Decimal128;
 use MongoDB\Client;
 use MongoDB\Collection;
 use MongoDB\Driver\Cursor;
@@ -249,6 +250,10 @@ class MongoDBTable
     {
         if ($valItem instanceof \ArrayObject) {
             $valItem = $valItem->exchangeArray([]);
+        }
+
+        if ($valItem instanceof Decimal128) {
+            $valItem = $valItem->__toString();
         }
 
         if (is_array($valItem)) {
