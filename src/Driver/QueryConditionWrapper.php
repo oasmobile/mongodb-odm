@@ -10,8 +10,13 @@ use Oasis\Mlib\Utils\Exceptions\DataValidationException;
  */
 class QueryConditionWrapper
 {
-    public const AND     = '&&';
-    public const BETWEEN = '^';
+    public const AND     = ':&&';
+    public const BETWEEN = ':^';
+    public const EQUAL   = ':=';
+    public const GT      = ':>';
+    public const LT      = ':<';
+    public const ELT     = ':>=';
+    public const EGT     = ':<=';
     //
     protected $filter         = [];
     protected $attributeTypes = [];
@@ -85,10 +90,20 @@ class QueryConditionWrapper
             [
                 'and',
                 'between',
+                '=',
+                '>',
+                '>=',
+                '<',
+                '<=',
             ],
             [
                 self:: AND,
                 self::BETWEEN,
+                self::EQUAL,
+                self::GT,
+                self::EGT,
+                self::LT,
+                self::ELT,
             ],
             $str
         );
@@ -106,20 +121,20 @@ class QueryConditionWrapper
 
     protected function transQueryStringToFilterElement($queryString)
     {
-        if (strpos($queryString, '=') !== false) {
-            return $this->getCompareExpression($queryString, '=');
+        if (strpos($queryString, self::EQUAL) !== false) {
+            return $this->getCompareExpression($queryString, self::EQUAL);
         }
-        if (strpos($queryString, '>') !== false) {
-            return $this->getCompareExpression($queryString, '>');
+        if (strpos($queryString, self::GT) !== false) {
+            return $this->getCompareExpression($queryString, self::GT);
         }
-        if (strpos($queryString, '>=') !== false) {
-            return $this->getCompareExpression($queryString, '>=');
+        if (strpos($queryString, self::EGT) !== false) {
+            return $this->getCompareExpression($queryString, self::EGT);
         }
-        if (strpos($queryString, '<') !== false) {
-            return $this->getCompareExpression($queryString, '<');
+        if (strpos($queryString, self::LT) !== false) {
+            return $this->getCompareExpression($queryString, self::LT);
         }
-        if (strpos($queryString, '<=') !== false) {
-            return $this->getCompareExpression($queryString, '<=');
+        if (strpos($queryString, self::ELT) !== false) {
+            return $this->getCompareExpression($queryString, self::ELT);
         }
         if (strpos($queryString, self::BETWEEN) !== false) {
             return $this->getBetweenExpression($queryString);
@@ -137,19 +152,19 @@ class QueryConditionWrapper
         }
 
         switch ($operator) {
-            case '=':
+            case self::EQUAL:
                 $comparisonOperator = '$eq';
                 break;
-            case '>':
+            case self::GT:
                 $comparisonOperator = '$gt';
                 break;
-            case '>=':
+            case self::EGT:
                 $comparisonOperator = '$gte';
                 break;
-            case '<':
+            case self::LT:
                 $comparisonOperator = '$lt';
                 break;
-            case '<=':
+            case self::ELT:
                 $comparisonOperator = '$lte';
                 break;
             default:
