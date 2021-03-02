@@ -1,4 +1,4 @@
 mongodb-odm:
-    endpoint: 'mongodb://127.0.0.1/'
+    endpoint: 'mongodb://127.0.0.1:27017'
     database: 'odm-ut-zxc'
     prefix:
