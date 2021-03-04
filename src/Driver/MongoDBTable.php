@@ -152,21 +152,31 @@ class MongoDBTable
             $upsert = false;
         }
 
-        $ret = $this->dbCollection->findOneAndUpdate(
-            $filter,
-            [
-                '$set' => $obj,
-            ],
-            [
-                'upsert' => $upsert,
-            ]
-        );
+        try {
+            $ret = $this->dbCollection->findOneAndUpdate(
+                $filter,
+                [
+                    '$set' => $obj,
+                ],
+                [
+                    'upsert' => $upsert,
+                ]
+            );
+            if (!empty($cv) && $ret == null) {
+                throw new DataConsistencyException();
+            }
 
-        if (!empty($cv) && $ret == null) {
-            throw new DataConsistencyException();
+            return $ret;
+        } catch (\Exception $ex) {
+            /* Ignore duplicate key error in data insert action,
+             * this error probability occurs when multi process try to insert a some item
+             * at the same time
+             */
+            if (strpos($ex->getMessage(), 'E11000 duplicate') !== false) {
+                return true;
+            }
+            throw $ex;
         }
-
-        return $ret;
     }
 
     protected function getCheckValues($checkValues)
